@@ -125,7 +125,7 @@ Sub Main
 
         buff$ = in$
 
-        tok$ = gettok$(0)
+        tok$ = gettok$
 
         If Left$(tok$, 1) >= "0" And Left$(tok$, 1) <= "9" Then
 
@@ -162,8 +162,8 @@ Sub process_line (lin$)
 
     buff$ = lin$
 
-    line_tok$ = gettok$(0)
-    nexttok$ = gettok$(0)
+    line_tok$ = gettok$
+    nexttok$ = gettok$
 
     If nexttok$ = "~" Then
         Call edit_delete(Val(line_tok$))
@@ -192,7 +192,7 @@ Sub do_command (cmd$)
         do_let (cmd$)
         buff$ = buff_after_parse_or$
 
-        If gettok$(0) <> "~" Then
+        If gettok$ <> "~" Then
             Print "warning: extra stuff after expression"
         End If
 
@@ -217,7 +217,7 @@ Sub do_command (cmd$)
 
         do_let ("LET " + cmd$)
         buff$ = buff_after_parse_or$
-        If gettok$(0) <> "~" Then
+        If gettok$ <> "~" Then
             Print "warning: extra stuff after expression"
         End If
 
@@ -313,7 +313,7 @@ Sub do_run
         If Left$(cmd$, 3) = "LET" Then
             do_let (cmd$)
             buff$ = buff_after_parse_or$
-            If gettok$(0) <> "~" Then
+            If gettok$ <> "~" Then
                 Print "warning: extra stuff after LET expression on line " + Str$(pc%)
             End If
 
@@ -327,7 +327,7 @@ Sub do_run
             pc% = do_gosub(cmd$) - 1
 
         ElseIf Left$(cmd$, 7) = "RETURN" Then
-            pc% = do_return(0)
+            pc% = do_return
 
         ElseIf cmd$ = "END" Or cmd$ = "STOP" Then
             stoprun% = 1
@@ -370,7 +370,7 @@ Sub do_print (cmd$)
 
     buff$ = Mid$(cmd$, 6)
 
-    tok$ = gettok$(0)
+    tok$ = gettok$
 
     If tok$ = "~" Then
         Print ""
@@ -385,10 +385,10 @@ Sub do_print (cmd$)
             tok$ = Mid$(tok$, 2, Len(tok$) - 2)
             Print tok$ + " ";
 
-            tok$ = gettok$(0)
+            tok$ = gettok$
 
             If tok$ = "," Then
-                tok$ = gettok$(0)
+                tok$ = gettok$
                 comma_last% = 1
             End If
 
@@ -396,10 +396,10 @@ Sub do_print (cmd$)
             Print Expr_eval$(tok$ + buff$) + " ";
             buff$ = buff_after_parse_or$
 
-            tok$ = gettok$(0)
+            tok$ = gettok$
 
             If tok$ = "," Then
-                tok$ = gettok$(0)
+                tok$ = gettok$
                 comma_last% = 1
             End If
         End If
@@ -418,7 +418,7 @@ Function do_if% (cmd$)
     b% = Val(Expr_eval$(Mid$(cmd$, 3)))
 
     buff$ = buff_after_parse_or$
-    If gettok$(0) <> "THEN" Then
+    If gettok$ <> "THEN" Then
         Print "warning: THEN not found right after expression end on line " + Str$(pc%)
     End If
 
@@ -448,9 +448,9 @@ Sub do_for (cmd$)
 
     Dim cvar$
 
-    cvar$ = gettok$(0)
+    cvar$ = gettok$
 
-    If gettok$(0) <> "=" Then
+    If gettok$ <> "=" Then
         Print "Missing = in FOR statment on line " + Str$(pc%)
         Exit Sub
     End If
@@ -463,7 +463,7 @@ Sub do_for (cmd$)
 
     buff$ = buff_after_parse_or$
 
-    If gettok$(0) <> "TO" Then
+    If gettok$ <> "TO" Then
         Print "Missing TO in FOR on line " + Str$(pc%)
         Exit Sub
     End If
@@ -474,7 +474,7 @@ Sub do_for (cmd$)
 
     istep% = 1
 
-    If gettok$(0) = "STEP" Then
+    If gettok$ = "STEP" Then
 
         istep% = Val(Expr_eval$(buff$))
 
@@ -482,7 +482,7 @@ Sub do_for (cmd$)
 
     buff$ = buff_after_parse_or$
 
-    If gettok$(0) <> "~" Then
+    If gettok$ <> "~" Then
 
         Print "Extraneous stuff after STEP value on line " + Str$(pc%)
 
@@ -514,7 +514,7 @@ Sub do_next (cmd$)
 
     Dim controlvariable$
 
-    controlvariable$ = gettok$(0)
+    controlvariable$ = gettok$
 
     If controlvariable$ <> acvar$(for_stackp%) Then
         Print "mismatched next on line " + Str$(pc%)
@@ -588,7 +588,7 @@ Function do_gosub% (cmd$)
     gosub_stack%(gosub_stack_ptr%) = pc%
 End Function
 
-Function do_return% (dummy)
+Function do_return%
     do_return% = gosub_stack%(gosub_stack_ptr%)
     gosub_stack_ptr% = gosub_stack_ptr% - 1
 End Function
@@ -599,7 +599,7 @@ Sub do_let (cmd$)
     Dim firstchar$
 
     buff$ = Mid$(cmd$, 4)
-    cvar$ = gettok$(0)
+    cvar$ = gettok$
 
     If cvar$ = "@" Then
         do_let_at_array (buff$)
@@ -612,7 +612,7 @@ Sub do_let (cmd$)
         Print "Variable name must follow LET"
         Exit Sub
 
-    ElseIf gettok$(0) <> "=" Then
+    ElseIf gettok$ <> "=" Then
 
         Print "Missing '=' in LET  " + cmd$
         Exit Sub
@@ -631,14 +631,14 @@ Sub do_let_at_array (e$)
     Dim rpn$
 
     buff$ = e$
-    If gettok$(0) <> "(" Then
+    If gettok$ <> "(" Then
         Print "an open left paren ( must follow @ in LET"
         Exit Sub
     End If
 
-    rpn$ = parse_or$(0)
+    rpn$ = parse_or$
 
-    If gettok$(0) <> ")" Then
+    If gettok$ <> ")" Then
         Print "missing right paren ) in LET @"
         Exit Sub
     End If
@@ -649,12 +649,12 @@ Sub do_let_at_array (e$)
 
     buff$ = buff_after_parse_or$
 
-    If gettok$(0) <> "=" Then
+    If gettok$ <> "=" Then
         Print "missing = in LET @"
         Exit Sub
     End If
 
-    rightval% = Val(Eval_rpn$(parse_or$(0)))
+    rightval% = Val(Eval_rpn$(parse_or$))
 
     If Not (leftval% >= 1 And leftval% <= 5000) Then
         Print "subscript out of bounds on left side of assignment is " + Str$(leftval%)
@@ -671,7 +671,7 @@ Sub do_input (cmd$)
     Dim firstchar$
 
     buff$ = Mid$(cmd$, 6)
-    cvar$ = gettok$(0)
+    cvar$ = gettok$
 
     If cvar$ = "@" Then
         do_input_at_array (buff$)
@@ -704,14 +704,14 @@ Sub do_input_at_array (e$)
     Dim rpn$
 
     buff$ = e$
-    If gettok$(0) <> "(" Then
+    If gettok$ <> "(" Then
         Print "an open left paren ( must follow @ in INPUT"
         Exit Sub
     End If
 
-    rpn$ = parse_or$(0)
+    rpn$ = parse_or$
 
-    If gettok$(0) <> ")" Then
+    If gettok$ <> ")" Then
         Print "missing right paren ) in INPUT @"
         Exit Sub
     End If
@@ -737,7 +737,7 @@ Function Eval_rpn$ (rpn$)
     Dim tok$
 
     clearstack
-    tok$ = gettok$(0)
+    tok$ = gettok$
 
     If tok$ = "~" Then
         Eval_rpn = "0"
@@ -746,11 +746,11 @@ Function Eval_rpn$ (rpn$)
 
     Do While tok$ <> "~"
         process_tok (tok$)
-        tok$ = gettok$(0)
+        tok$ = gettok$
     Loop
 
     Dim r$
-    r$ = mypop(0)
+    r$ = mypop
 
     Eval_rpn$ = r$
 
@@ -761,11 +761,11 @@ Function Expr_eval$ (e$)
     clearstack
 
     buff$ = e$
-    buff$ = parse_or$(0)
+    buff$ = parse_or$
 
     Dim tok$
 
-    tok$ = gettok$(0)
+    tok$ = gettok$
 
     If tok$ = "~" Then
         Expr_eval = "0"
@@ -774,11 +774,11 @@ Function Expr_eval$ (e$)
 
     Do While tok$ <> "~"
         process_tok (tok$)
-        tok$ = gettok$(0)
+        tok$ = gettok$
     Loop
 
     Dim r%
-    r% = Val(mypop(0))
+    r% = Val(mypop)
 
     Expr_eval$ = Str$(r%)
 
@@ -787,13 +787,13 @@ End Function
 Sub process_tok (tok$)
 
     If tok$ = "UNM" Then
-        mypush (Str$(-Val(mypop$(0))))
+        mypush (Str$(-Val(mypop$)))
         Exit Sub
     End If
 
     If tok$ = "GETAT" Then
 
-        i% = Val(mypop$(0))
+        i% = Val(mypop$)
         If i% < 1 Or i% > 5000 Then
             Print "Subscript out of range 1..5000 for " + Str$(i%)
             mypush (Str$(0))
@@ -828,8 +828,8 @@ Sub process_op (op$)
     Dim rightval%
     Dim res%
 
-    rightval% = Val(mypop$(0))
-    leftval% = Val(mypop$(0))
+    rightval% = Val(mypop$)
+    leftval% = Val(mypop$)
 
     If op$ = "+" Then
         res% = leftval% + rightval%
@@ -882,7 +882,7 @@ Sub mypush (tok$)
     msp% = msp% + 1
 End Sub
 
-Function mypop$ (dummy)
+Function mypop$
     msp% = msp% - 1
     mypop$ = mystack$(msp%)
 End Function
@@ -926,7 +926,7 @@ End Function
 
 ' here we go, the gettok$ function is the so-called lexical scanner.
 
-Function gettok$ (dummy)
+Function gettok$
     Dim collect$
     Dim b$
     Dim b1$
@@ -1036,16 +1036,16 @@ End Function
 ' each function returns the rpn of the converted expression fragment.
 
 
-Function parse_factor$ (dummy)
+Function parse_factor$
     Dim tok$
     Dim rpn$
     '    Console.WriteLine("Enter parse_factor with buff$ = '" + buff$ +"'")
-    tok$ = gettok$(0)
+    tok$ = gettok$
 
     If tok$ = "(" Then
 
-        rpn$ = parse_or$(0)
-        tok$ = gettok$(0)
+        rpn$ = parse_or$
+        tok$ = gettok$
 
         If tok$ <> ")" Then
             Print "Missing ) before " + buff$
@@ -1059,7 +1059,7 @@ Function parse_factor$ (dummy)
 
     If tok$ = "@" Then
 
-        tok$ = gettok$(0)
+        tok$ = gettok$
 
         If tok$ <> "(" Then
             Print "Error in let atsign"
@@ -1068,9 +1068,9 @@ Function parse_factor$ (dummy)
             Exit Function
         End If
 
-        rpn$ = parse_or$(0)
+        rpn$ = parse_or$
         
-        tok$ = gettok$(0)
+        tok$ = gettok$
         
         If tok$ <> ")" Then
             Print "Missing ) before " + buff$
@@ -1087,7 +1087,7 @@ Function parse_factor$ (dummy)
     End If
 
     If tok$ = "-" Then ' I think this is uneccesary after review
-        rpn$ = parse_or$(0)
+        rpn$ = parse_or$
         parse_factor$ = rpn$ + "UNM "
         Exit Function
     End If
@@ -1098,16 +1098,16 @@ Function parse_factor$ (dummy)
     '    Console.WriteLine("Exit parse_factor with buff$ = '" + buff$ +"'")
 End Function
 
-Function parse_exponent$ (dummy)
+Function parse_exponent$
     Dim tok$
     Dim rpn$
 
-    rpn$ = parse_factor$(0)
-    tok$ = gettok$(0)
+    rpn$ = parse_factor$
+    tok$ = gettok$
 
     Do While tok$ = "^"
-        rpn$ = rpn$ + parse_exponent$(0) + tok$
-        tok$ = gettok$(0)
+        rpn$ = rpn$ + parse_exponent$ + tok$
+        tok$ = gettok$
     Loop
 
     buff$ = tok$ + " " + buff$
@@ -1122,14 +1122,14 @@ End Function
 ' interpretations
 
 
-Function parse_unary_minus$ (dummy)
+Function parse_unary_minus$
     Dim tok$
     Dim rpn$
     Dim neg%
 
     neg% = 0
 
-    tok$ = gettok$(0)
+    tok$ = gettok$
     Do While tok$ = "-" Or tok$ = "+"
         If tok$ = "-" Then
             If neg% = 0 Then
@@ -1138,12 +1138,12 @@ Function parse_unary_minus$ (dummy)
                 neg% = 0
             End If
         End If
-        tok$ = gettok$(0)
+        tok$ = gettok$
     Loop
 
     buff$ = tok$ + " " + buff$
 
-    rpn$ = parse_exponent$(0)
+    rpn$ = parse_exponent$
 
     If neg% = 1 Then
         rpn$ = rpn$ + "UNM "
@@ -1153,16 +1153,16 @@ Function parse_unary_minus$ (dummy)
 
 End Function
 
-Function parse_term$ (dummy)
+Function parse_term$
     Dim tok$
     Dim rpn$
     
-    rpn$ = parse_unary_minus(0)
-    tok$ = gettok$(0)
+    rpn$ = parse_unary_minus
+    tok$ = gettok$
     
     Do While tok$ = "*" Or tok$ = "/"
-        rpn$ = rpn$ + parse_unary_minus(0) + tok$
-        tok$ = gettok$(0)
+        rpn$ = rpn$ + parse_unary_minus + tok$
+        tok$ = gettok$
     Loop
     
     buff$ = tok$ + " " + buff$
@@ -1172,16 +1172,16 @@ End Function
 
 
 
-Function parse_expr$ (dummy)
+Function parse_expr$
     Dim tok$
     Dim rpn$
     
-    rpn$ = parse_term(0)
-    tok$ = gettok$(0)
+    rpn$ = parse_term
+    tok$ = gettok$
     
     Do While tok$ = "+" Or tok$ = "-"
-        rpn$ = rpn$ + parse_term(0) + tok$
-        tok$ = gettok$(0)
+        rpn$ = rpn$ + parse_term + tok$
+        tok$ = gettok$
     Loop
     
     buff$ = tok$ + " " + buff$
@@ -1190,16 +1190,16 @@ Function parse_expr$ (dummy)
     
 End Function
 
-Function parse_condition$ (dummy)
+Function parse_condition$
     Dim tok$
     Dim rpn$
     
-    rpn$ = parse_expr$(0)
-    tok$ = gettok$(0)
+    rpn$ = parse_expr$
+    tok$ = gettok$
 
     If Left$(tok$, 1) = "=" Or Left$(tok$, 1) = ">" Or Left$(tok$, 1) = "<" Then
-        rpn$ = rpn$ + parse_expr(0) + tok$
-        tok$ = gettok$(0)
+        rpn$ = rpn$ + parse_expr + tok$
+        tok$ = gettok$
     End If
     
     buff$ = tok$ + " " + buff$
@@ -1207,16 +1207,16 @@ Function parse_condition$ (dummy)
 
 End Function
 
-Function parse_and$ (dummy)
+Function parse_and$
     Dim tok$
     Dim rpn$
 
-    rpn$ = parse_condition(0)
-    tok$ = gettok$(0)
+    rpn$ = parse_condition
+    tok$ = gettok$
 
     Do While tok$ = "AND"
-        rpn$ = rpn$ + parse_condition(0) + tok$ + " "
-        tok$ = gettok$(0)
+        rpn$ = rpn$ + parse_condition + tok$ + " "
+        tok$ = gettok$
     Loop
 
     buff$ = tok$ + " " + buff$
@@ -1224,17 +1224,17 @@ Function parse_and$ (dummy)
 
 End Function
 
-Function parse_or$ (dummy)
+Function parse_or$
     Dim tok$
     Dim rpn$
     '    Console.WriteLine("Entering parse_or with buff$ = " + buff$)
-    rpn$ = parse_and(0)
+    rpn$ = parse_and
 
-    tok$ = gettok$(0)
+    tok$ = gettok$
 
     Do While tok$ = "OR"
-        rpn$ = rpn$ + parse_and(0) + tok$ + " "
-        tok$ = gettok$(0)
+        rpn$ = rpn$ + parse_and + tok$ + " "
+        tok$ = gettok$
     Loop
 
     buff$ = tok$ + " " + buff$
