@@ -129,11 +129,11 @@ Sub Main
 
         If Left$(tok$, 1) >= "0" And Left$(tok$, 1) <= "9" Then
 
-            process_line (in$)
+            process_line in$
 
         ElseIf tok$ <> "BYE" Then
 
-            do_command (in$)
+            do_command in$
 
         ElseIf tok$ = "BYE" Then
 
@@ -166,12 +166,12 @@ Sub process_line (lin$)
     nexttok$ = gettok$
 
     If nexttok$ = "~" Then
-        Call edit_delete(Val(line_tok$))
+        edit_delete Val(line_tok$)
     Else
         linenum% = Val(line_tok$)
         mystring$ = nexttok$ + buff$
 
-        Call edit_replace(linenum%, mystring$)
+        edit_replace linenum%, mystring$
 
     End If
 
@@ -185,11 +185,11 @@ Sub do_command (cmd$)
 
     ElseIf Left$(cmd$, 5) = "PRINT" Then
 
-        do_print (cmd$)
+        do_print cmd$
 
     ElseIf Left$(cmd$, 3) = "LET" Then
 
-        do_let (cmd$)
+        do_let cmd$
         buff$ = buff_after_parse_or$
 
         If gettok$ <> "~" Then
@@ -203,11 +203,11 @@ Sub do_command (cmd$)
 
     ElseIf Left$(cmd$, 4) = "LOAD" Then
 
-        do_load (LTrim$(RTrim$(Mid$(cmd$, 5)))) ' The trims may not be necessary
+        do_load LTrim$(RTrim$(Mid$(cmd$, 5)))
 
     ElseIf Left$(cmd$, 4) = "SAVE" Then
 
-        do_save (LTrim$(RTrim$(Mid$(cmd$, 5)))) '
+        do_save LTrim$(RTrim$(Mid$(cmd$, 5)))
 
     ElseIf cmd$ = "RUN" Then
 
@@ -215,7 +215,7 @@ Sub do_command (cmd$)
 
     Else
 
-        do_let ("LET " + cmd$)
+        do_let "LET " + cmd$
         buff$ = buff_after_parse_or$
         If gettok$ <> "~" Then
             Print "warning: extra stuff after expression"
@@ -311,14 +311,14 @@ Sub do_run
         cmd$ = statement$(pc%)
 
         If Left$(cmd$, 3) = "LET" Then
-            do_let (cmd$)
+            do_let cmd$
             buff$ = buff_after_parse_or$
             If gettok$ <> "~" Then
                 Print "warning: extra stuff after LET expression on line " + Str$(pc%)
             End If
 
         ElseIf Left$(cmd$, 5) = "PRINT" Then
-            do_print (cmd$)
+            do_print cmd$
 
         ElseIf Left$(cmd$, 4) = "GOTO" Then
             pc% = do_goto(cmd$) - 1
@@ -340,17 +340,17 @@ Sub do_run
             End If
 
         ElseIf Left$(cmd$, 5) = "INPUT" Then
-            do_input (cmd$)
+            do_input cmd$
 
         ElseIf Left$(cmd$, 3) = "FOR" Then
-            do_for (cmd$)
+            do_for cmd$
 
         ElseIf Left$(cmd$, 4) = "NEXT" Then
-            do_next (cmd$)
+            do_next cmd$
 
         Else
             cmd$ = "LET " + cmd$
-            do_let (cmd$)
+            do_let cmd$
         End If
 
         If Left$(cmd$, 4) <> "NEXT" Then
@@ -537,7 +537,7 @@ Sub do_next (cmd$)
 
     cvar$ = acvar$(for_stackp%)
     Dim v%
-    v% = Val(Get_variable(cvar$))
+    v% = Val(get_var$(cvar$))
 
     v% = v% + istep%
 
@@ -559,7 +559,7 @@ Sub do_next (cmd$)
         End If
     End If
 
-    Call set_var(cvar$, Str$(v%))
+    set_var cvar$, Str$(v%)
 
 End Sub
 
@@ -602,7 +602,7 @@ Sub do_let (cmd$)
     cvar$ = gettok$
 
     If cvar$ = "@" Then
-        do_let_at_array (buff$)
+        do_let_at_array buff$
         Exit Sub
     End If
 
@@ -674,7 +674,7 @@ Sub do_input (cmd$)
     cvar$ = gettok$
 
     If cvar$ = "@" Then
-        do_input_at_array (buff$)
+        do_input_at_array buff$
         Exit Sub
     End If
 
@@ -688,8 +688,6 @@ Sub do_input (cmd$)
 
     Input user_input$
 
-    user_input$ = LTrim$(RTrim$(user_input$))
-
     set_var cvar$, Expr_eval$(user_input$)
 
 End Sub
@@ -699,7 +697,6 @@ Sub do_input_at_array (e$)
     Dim user_input$
 
     Dim subval%
-    Dim inpval%
 
     Dim rpn$
 
@@ -749,10 +746,7 @@ Function Eval_rpn$ (rpn$)
         tok$ = gettok$
     Loop
 
-    Dim r$
-    r$ = mypop
-
-    Eval_rpn$ = r$
+    Eval_rpn$ = mypop$
 
 End Function
   
@@ -773,21 +767,18 @@ Function Expr_eval$ (e$)
     End If
 
     Do While tok$ <> "~"
-        process_tok (tok$)
+        process_tok tok$
         tok$ = gettok$
     Loop
 
-    Dim r%
-    r% = Val(mypop)
-
-    Expr_eval$ = Str$(r%)
+    Expr_eval$ = mypop$
 
 End Function
 
 Sub process_tok (tok$)
 
     If tok$ = "UNM" Then
-        mypush (Str$(-Val(mypop$)))
+        mypush Str$(-Val(mypop$))
         Exit Sub
     End If
 
@@ -796,30 +787,30 @@ Sub process_tok (tok$)
         i% = Val(mypop$)
         If i% < 1 Or i% > 5000 Then
             Print "Subscript out of range 1..5000 for " + Str$(i%)
-            mypush (Str$(0))
+            mypush "0"
             Exit Sub
         End If
 
-        mypush (Str$(at_array%(i%)))
+        mypush Str$(at_array%(i%))
 
         Exit Sub
     End If
 
     For i% = 1 To ops
         If op$(i%) = tok$ Then
-            process_op (op$(i%))
+            process_op op$(i%)
             Exit Sub
         End If
     Next i%
  
     For i% = 1 To 8
         If logical_op$(i%) = tok$ Then
-            process_op (logical_op$(i%))
+            process_op logical_op$(i%)
             Exit Sub
         End If
     Next i%
  
-    process_num_or_var (tok$)
+    process_num_or_var tok$
 
 End Sub
 
@@ -860,16 +851,16 @@ Sub process_op (op$)
         Exit Sub
     End If
 
-    mypush (Str$(res%))
+    mypush Str$(res%)
 
 End Sub
 
 Sub process_num_or_var (num$)
     If Left$(num$, 1) >= "0" And Left$(num$, 1) <= "9" Then
 
-        mypush (num$)
+        mypush num$
     Else
-        mypush (Get_variable(num$))
+        mypush get_var$(num$)
     End If
 End Sub
 
@@ -908,11 +899,11 @@ Sub set_var (key$, item$)
 
 End Sub
 
-Function Get_variable$ (key$)
+Function get_var$ (key$)
 
     If Len(key$) <> 1 Then
         'print "variable name " + key + " is too long"
-        Get_variable$ = "dummy"
+        get_var$ = "0"
         Exit Function
     End If
 
@@ -920,7 +911,7 @@ Function Get_variable$ (key$)
 
     nkey% = Asc(key$) - Asc("A") + 1
 
-    Get_variable$ = vars$(nkey%)
+    get_var$ = vars$(nkey%)
 
 End Function
 
@@ -1039,7 +1030,7 @@ End Function
 Function parse_factor$
     Dim tok$
     Dim rpn$
-    '    Console.WriteLine("Enter parse_factor with buff$ = '" + buff$ +"'")
+
     tok$ = gettok$
 
     If tok$ = "(" Then
@@ -1069,16 +1060,16 @@ Function parse_factor$
         End If
 
         rpn$ = parse_or$
-        
+
         tok$ = gettok$
-        
+
         If tok$ <> ")" Then
             Print "Missing ) before " + buff$
             buff$ = ""
             parse_factor = "~"
             Exit Function
         End If
-        ' Console.WriteLine("@ evaluated to "+rpn+"GETAT")
+
         parse_factor$ = rpn$ + "GETAT "
         Exit Function
 
@@ -1092,10 +1083,9 @@ Function parse_factor$
         Exit Function
     End If
 
-    '    Console.WriteLine("token added to rpn is " + tok$ + " ")
     rpn$ = tok$ + " "
     parse_factor$ = rpn$
-    '    Console.WriteLine("Exit parse_factor with buff$ = '" + buff$ +"'")
+
 End Function
 
 Function parse_exponent$
@@ -1227,8 +1217,8 @@ End Function
 Function parse_or$
     Dim tok$
     Dim rpn$
-    '    Console.WriteLine("Entering parse_or with buff$ = " + buff$)
-    rpn$ = parse_and
+
+    rpn$ = parse_and$
 
     tok$ = gettok$
 
