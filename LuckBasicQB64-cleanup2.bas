@@ -825,7 +825,7 @@ Sub process_op (op$)
     If op$ = "+" Then
         res% = leftval% + rightval%
     ElseIf op$ = "-" Then
-        res% = leftval% - rightval
+        res% = leftval% - rightval%
     ElseIf op$ = "*" Then
         res% = leftval% * rightval%
     ElseIf op$ = "/" Then
